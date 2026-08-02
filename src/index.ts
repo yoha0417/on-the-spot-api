@@ -48,7 +48,7 @@ app.get('/', async (c) => {
 
 // 2. コントローラーをルートに登録！
 // これにより POST / へのリクエストが checkInController に流れます
-app.route('/', checkInController);
+app.route('/api/checkin', checkInController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {

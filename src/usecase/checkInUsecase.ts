@@ -32,7 +32,7 @@ export class CheckInUsecase {
         this.visitRepo.createVisit({
           userId: 'current-user-id', // Replace with actual user context
           placeId: place.id,
-          enteredAt: new Date().toISOString()
+          checkedInAt: new Date().toISOString()
         })
       )
     );

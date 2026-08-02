@@ -1,63 +1,81 @@
-```txt
+# On The Spot - Backend
+
+位置情報連動型SNS「On The Spot」のバックエンドリポジトリです。
+8月23日のハッカソンMVP提出に向け、開発スピードと保守性のバランスを取った「Pragmatic Clean Architecture」を採用しています。
+
+## 技術スタック
+- **実行環境**: Cloudflare Workers
+- **フレームワーク**: Hono
+- **データベース**: Cloudflare D1 (SQLite)
+- **ORM**: Drizzle ORM
+- **言語**: TypeScript
+
+## ディレクトリ構造 (Pragmatic Clean Architecture)
+関心事の分離を意識し、以下のような構造を採用しています。
+
+```plaintext
+src/
+ ├── domain/
+ │   ├── models/
+ │   └── errors/
+ ├── usecase/
+ ├── infrastructure/
+ │   ├── db/
+ │   │   ├── schema.ts
+ │   │   └── client.ts
+ │   └── repositories/
+ ├── interface/
+ │   ├── controllers/
+ │   ├── routes/
+ │   └── middleware/
+ ├── utils/
+ │   └── geo.ts
+ └── index.ts
+```
+
+## 開発ガイド
+
+### セットアップ・起動
+```bash
 npm install
 npm run dev
 ```
 
-```txt
+### デプロイ
+```bash
 npm run deploy
 ```
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
-
-```txt
+### 型定義の生成・同期
+Wranglerの設定に基づいて型を生成します。
+```bash
 npm run cf-typegen
 ```
-
-Pass the `CloudflareBindings` as generics when instantiating `Hono`:
-
-```ts
-// src/index.ts
+※Hono初期化時には、生成された `CloudflareBindings` をジェネリクスとして渡します。
+```typescript
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 ```
 
-1. Drizzleマイグレーションの全体像（3つのステップ）
-DrizzleでのDB変更は、基本的に以下のサイクルをグルグル回していきます。
+## データベース操作 (Drizzle ORM + D1)
+DrizzleでのDB変更は、基本的に以下の3ステップのサイクルを回します。
 
-Plaintext
-[1. schema.tsを書き換える] 
-       ↓ (設計変更)
-[2. npx drizzle-kit generate] 
-       ↓ (SQLファイルを自動生成)
-[3. wrangler d1 migrations apply DB --local] 
-       ↓ (実データベースへ適用)
-これを1つずつおさらいしておきましょう。
+1. **スキーマの定義・変更** (`src/infrastructure/db/schema.ts`)
+   - キャメルケースでプロパティを書き、第一引数にスネークケースのDBカラム名を指定します。
+   - 型定義（Type）は可能な限りDrizzleから推論（`InferSelectModel`など）させます。
+2. **マイグレーションファイルの生成**
+   ```bash
+   npx drizzle-kit generate
+   ```
+   - 差分ファイルが `drizzle.config.ts` で指定した出力先（`./drizzle` など）に生成されます。
+3. **実データベースへの適用**
+   ```bash
+   npx wrangler d1 migrations apply DB --local
+   ```
+   - 本番環境へ適用する場合は `--local` の代わりに `--remote` を使用します。
 
-① スキーマの定義・変更 (src/db/schema.ts)
-やること: 「新しいカラムを追加したい」「新しいテーブルを作りたい」となったら、まずはここを書き換えます。
-
-ポイント: キャメルケースでプロパティを書きつつ、第一引数には必ずスネークケースのDBカラム名を指定します（例: createdAt: text('created_at')）。
-
-② マイグレーションファイルの生成 (npx drizzle-kit generate)
-やること: schema.ts の変更内容を読み取り、「前回から何が変わったか」を自動で計算して、変更用のSQLファイル（差分ファイル）を生成します。
-
-出力先: 設定ファイル（drizzle.config.ts）の out で指定したフォルダ（例: drizzle/）に、0001_xxxx.sql のような名前で保存されます。
-
-注意点: この時点ではまだ実際のローカルDBの構造は変わっていません（設計図を作っただけの状態）。
-
-③ 実データベースへの適用 (npx wrangler d1 migrations apply DB --local)
-やること: 生成されたSQLファイルを、Wranglerを経由してローカルのCloudflare D1（SQLite）に流し込み、テーブルを実際に変更します。
-
-本番環境への適用: ローカルではなく本番（Cloudflare上）に反映させたい場合は、最後に --local の代わりに --remote をつけて実行します。
-
-Bash
-npx wrangler d1 migrations apply DB --remote
-2. 今後よくある「困ったときの処方箋」
-開発中には「スキーマを変えすぎてマイグレーションの履歴がごちゃごちゃになった！」ということがよく起きます。そんなときのハッカソン的なリセット術です。
-
-完全に最初からやり直したい時（ローカル開発中のみ有効）
-古い履歴やローカルDBのファイルはゴミ箱に捨てて、まっさらな状態から作り直した方が早いです。
-
-Bash
+### 困ったときの処方箋（ローカル環境のリセット）
+スキーマ変更が複雑になり、履歴をリセットしたい場合のハッカソン的な対応手順です。
+```bash
 # 1. マイグレーション履歴とローカルDBを丸ごと削除
 rm -rf drizzle
 rm -rf .wrangler/state/v3/d1
@@ -68,3 +86,18 @@ npx wrangler d1 migrations apply DB --local
 
 # 3. テストデータを入れ直す
 npx tsx scripts/seed.ts
+```
+
+## 主要機能の実装仕様
+
+### 位置情報チェックイン/チェックアウト（ハイブリッド判定方式）
+Cloudflare Workersの制限（メモリ・CPU）を考慮し、DB側での事前絞り込みとHono側での正確な距離計算を組み合わせます。
+
+- **判定基準**: スポット（緯度: `lat`, 経度: `lng`）から半径50m以内を「チェックイン圏内」とします。
+- **ハイブリッド方式のロジック**:
+  1. **Bounding Box (D1側)**: 現在地から東西南北50mの境界箱（Bounding Box）を計算し、`between` 演算子を用いてその範囲内のスポットのみをDBから取得します。
+  2. **Haversine公式 (Hono側)**: Usecase内で取得候補に対して球面三角法（Haversine formula）を用いて正確な距離を計算し、50m以内のスポットに対してチェックイン処理（`visits` テーブルへの記録）を行います。
+
+## 開発上の制約事項
+- **オーバーエンジニアリングの回避**: ハッカソンに間に合う「実用的な（Pragmatic）」コードを心がけます。
+- **外部ライブラリの制限**: エッジ環境（Cloudflare Workers）で動作させるため、Node.js依存のネイティブモジュールは使用しません。距離計算用の外部ライブラリ（`geolib`など）も使用せず、`src/utils/geo.ts` 等に自前で軽量なロジックを実装します。

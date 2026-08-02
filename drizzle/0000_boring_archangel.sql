@@ -1,3 +1,12 @@
+CREATE TABLE `likes` (
+	`id` text PRIMARY KEY NOT NULL,
+	`post_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `places` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -13,6 +22,8 @@ CREATE TABLE `posts` (
 	`place_id` text NOT NULL,
 	`visit_id` text NOT NULL,
 	`content` text NOT NULL,
+	`image_url` text,
+	`is_delayed_publish` integer DEFAULT false NOT NULL,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`place_id`) REFERENCES `places`(`id`) ON UPDATE no action ON DELETE no action,
@@ -32,8 +43,9 @@ CREATE TABLE `visits` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`place_id` text NOT NULL,
-	`entered_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	`exited_at` text,
+	`checked_in_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`last_heartbeat_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`checked_out_at` text,
 	`status` text DEFAULT 'active' NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`place_id`) REFERENCES `places`(`id`) ON UPDATE no action ON DELETE no action

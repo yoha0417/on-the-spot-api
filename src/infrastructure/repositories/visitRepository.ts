@@ -1,6 +1,4 @@
-import { db } from '../db/client';
 import { visits } from '../db/schema';
-import { eq } from 'drizzle-orm';
 
 export class VisitRepository {
 
