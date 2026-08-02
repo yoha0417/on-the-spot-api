@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "on-the-spot-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-31",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "on-the-spot-local-db",
+      "database_id": "xxxx-xxxx-xxxx",
+      "migrations_dir": "drizzle"
+    }
+    
+  ],
+  "alias": {
+    "drizzle-orm/drizzle": "drizzle-orm/drizzle",
+    "drizzle-orm/sqlite": "drizzle-orm/sqlite"
+  }
+}
