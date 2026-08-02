@@ -56,6 +56,19 @@ npm run cf-typegen
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 ```
 
+### コードの品質チェック（静的解析・型チェック）
+コミット前やデプロイ前には、必ず以下のコマンドを実行してコードの品質と型チェックを行ってください。
+
+* **Biome による Lint・コード整形と自動修正:**
+  ```bash
+  npm run lint:fix
+  ```
+* **TypeScript による型チェック（コンパイルエラーの検出）:**
+  ```bash
+  npx -p typescript tsc --noEmit
+  ```
+
+
 ## データベース操作 (Drizzle ORM + D1)
 DrizzleでのDB変更は、基本的に以下の3ステップのサイクルを回します。
 
