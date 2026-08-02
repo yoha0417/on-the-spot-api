@@ -20,4 +20,14 @@ export class PlaceRepository {
         )
       );
   }
+
+  async findByPlaceId(placeId: string) {
+    const [place] = await this.db
+      .select()
+      .from(places)
+      .where(eq(places.id, placeId));
+    
+    return place;
+  }
+
 }

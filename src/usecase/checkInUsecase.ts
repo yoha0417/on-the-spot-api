@@ -9,34 +9,26 @@ export class CheckInUsecase {
     private visitRepo: VisitRepository
   ) {}
 
-  async execute(lat: number, lng: number) {
+  async execute(lat: number, lng: number, placeId: string) {
     // 1. Calculate bounding box
-    const { minLat, maxLat, minLng, maxLng } = getBoundingBox(lat, lng);
+    const place = await this.placeRepo.findByPlaceId(placeId);
+  if (!place) {
+    throw new Error('Place not found');
+  }
 
-    // 2. Get places within bounding box
-    const places = await this.placeRepo.findPlacesWithinBoundingBox(
-      minLat, maxLat, minLng, maxLng
-    );
+  const distance = calculateHaversineDistance(lat, lng, place.latitude, place.longitude);
+  if (distance > 50) {
+    throw new Error('チェックイン範囲外です');
+  }
 
-    // 3. Filter by exact distance
-    const validPlaces = places.filter(place => {
-      const distance = calculateHaversineDistance(
-        lat, lng, place.latitude, place.longitude
-      );
-      return distance <= 50; // 50m threshold
-    });
+  const visit = await this.visitRepo.createChecknedIn({
+    userId: 'current-user-id',
+    placeId,
+    checked_in_at: new Date(),
+    last_heartbeat_at: new Date(),
+    status: 'active'
+  });
 
-    // 4. Create check-in records
-    const results = await Promise.all(
-      validPlaces.map(place =>
-        this.visitRepo.createVisit({
-          userId: 'current-user-id', // Replace with actual user context
-          placeId: place.id,
-          checkedInAt: new Date().toISOString()
-        })
-      )
-    );
-
-    return results;
+    return { success: true, visit };
   }
 }
