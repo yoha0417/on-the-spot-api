@@ -15,5 +15,10 @@
   "alias": {
     "drizzle-orm/drizzle": "drizzle-orm/drizzle",
     "drizzle-orm/sqlite": "drizzle-orm/sqlite"
+  },
+  "triggers": {
+    "crons": [
+      "*/10 * * * *"
+    ]
   }
 }

@@ -1,10 +1,17 @@
-import type { D1Database } from "@cloudflare/workers-types";
+import type {
+	D1Database,
+	ExecutionContext,
+	ScheduledEvent,
+} from "@cloudflare/workers-types";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { createDb } from "./infrastructure/db/client";
 // ※ usersテーブルのスキーマパスは実際のファイル構成に合わせて調整してください
 import { users } from "./infrastructure/db/schema";
+import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { checkInController } from "./interface/controllers/checkInController";
+import { heartbeatController } from "./interface/controllers/heartbeatController";
+import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
 type Bindings = {
@@ -53,6 +60,7 @@ app.get("/", async (c) => {
 // 2. コントローラーをルートに登録！
 // これにより POST / へのリクエストが checkInController に流れます
 app.route("/api/checkin", checkInController);
+app.route("/api/heartbeat", heartbeatController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {
@@ -61,4 +69,32 @@ app.onError((err, c) => {
 	return c.text("Internal Server Error", 500);
 });
 
-export default app;
+export default {
+	// ① HTTPリクエストのハンドラー
+	fetch: app.fetch,
+
+	// ② Cronバッチ（Scheduledイベント）のハンドラー
+	scheduled: async (
+		event: ScheduledEvent,
+		env: Bindings,
+		_ctx: ExecutionContext,
+	) => {
+		switch (event.cron) {
+			case "*/10 * * * *": {
+				console.log("[Cron] Auto-checkout process started...");
+				const db = createDb(env.DB);
+				const visitRepo = new VisitRepository(db);
+				const usecase = new AutoCheckoutUsecase(visitRepo);
+
+				// ハートビートが30分以上途絶えているものを自動チェックアウト
+				const results = await usecase.execute(30);
+				console.log(
+					`[Cron] Auto-checkout completed. Checked out ${results.length} visits.`,
+				);
+				break;
+			}
+			default:
+				console.log(`[Cron] Unhandled schedule: ${event.cron}`);
+		}
+	},
+};

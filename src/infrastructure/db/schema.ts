@@ -39,8 +39,12 @@ export const visits = sqliteTable("visits", {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.notNull(),
 	checkedOutAt: text("checked_out_at"),
-	status: text("status").default("active").notNull(),
+	status: text("status", { enum: ["active", "checked_out"] })
+		.default("active")
+		.notNull(),
 });
+
+export type VisitStatus = typeof visits.$inferSelect.status; // "active" | "checked_out"
 
 export const posts = sqliteTable("posts", {
 	id: text("id")

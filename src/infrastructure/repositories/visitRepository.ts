@@ -1,5 +1,6 @@
+import { and, eq, lt } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { visits } from "../db/schema";
+import { type VisitStatus, visits } from "../db/schema";
 
 export class VisitRepository {
 	constructor(private db: DbInstance) {}
@@ -17,7 +18,7 @@ export class VisitRepository {
 		placeId: string;
 		checked_in_at: Date;
 		last_heartbeat_at: Date;
-		status: string;
+		status: VisitStatus;
 	}) {
 		const [result] = await this.db
 			.insert(visits)
@@ -30,5 +31,58 @@ export class VisitRepository {
 			})
 			.returning();
 		return result;
+	}
+
+	async findActiveVisitByUserAndPlace(userId: string, placeId: string) {
+		const [visit] = await this.db
+			.select()
+			.from(visits)
+			.where(
+				and(
+					eq(visits.userId, userId),
+					eq(visits.placeId, placeId),
+					eq(visits.status, "active"),
+				),
+			);
+		return visit;
+	}
+
+	async updateHeartbeat(id: string, lastHeartbeatAt: Date) {
+		const [result] = await this.db
+			.update(visits)
+			.set({
+				lastHeartbeatAt: lastHeartbeatAt.toISOString(),
+			})
+			.where(eq(visits.id, id))
+			.returning();
+		return result;
+	}
+
+	async checkout(id: string, checkedOutAt: Date) {
+		const [result] = await this.db
+			.update(visits)
+			.set({
+				status: "checked_out",
+				checkedOutAt: checkedOutAt.toISOString(),
+			})
+			.where(eq(visits.id, id))
+			.returning();
+		return result;
+	}
+
+	async autoCheckoutExpiredVisits(threshold: Date, checkoutTime: Date) {
+		return await this.db
+			.update(visits)
+			.set({
+				status: "checked_out",
+				checkedOutAt: checkoutTime.toISOString(),
+			})
+			.where(
+				and(
+					eq(visits.status, "active"),
+					lt(visits.lastHeartbeatAt, threshold.toISOString()),
+				),
+			)
+			.returning();
 	}
 }

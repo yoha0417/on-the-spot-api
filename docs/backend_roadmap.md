@@ -29,7 +29,7 @@
   1. `visits` テーブルから `status = 'active'` のレコードを取得。
   2. 現在時刻と `last_heartbeat_at` を比較し、一定時間（例: 30分）以上経過しているレコードを抽出。
   3. 抽出したレコードを対象に `UPDATE` を実行。
-     - `status` を `'completed'` に変更。
+     - `status` を `'checked_out'` に変更。
      - `checked_out_at` に現在時刻（または最終ハートビート時刻）を記録。
 
 ### Step 4: 投稿・タイムラインAPI (遅延公開ロジック)
