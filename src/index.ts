@@ -66,8 +66,8 @@ app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/posts", postController);
 
-// New timeline endpoint
-app.get("/api/timeline", async (c) => {
+// Timeline posts endpoint
+app.get("/api/posts", async (c) => {
 	const placeId = c.req.query("placeId");
 	if (!placeId) {
 		return c.json({ error: "placeId query parameter is required" }, 400);
@@ -75,13 +75,21 @@ app.get("/api/timeline", async (c) => {
 
 	// TODO: Replace with actual auth user ID
 	const userId = "temp-user-id"; 
+	const currentTime = new Date();
 	
 	const db = c.get("db");
 	const postRepo = new PostRepository(db);
-	const usecase = new GetTimelinePostsUsecase(postRepo);
 	
-	const posts = await usecase.execute(placeId, userId);
-	return c.json({ posts });
+	const posts = await postRepo.findTimelinePosts({
+		placeId,
+		userId,
+		currentTime
+	});
+	
+	return c.json({ 
+		posts,
+		currentTime: currentTime.toISOString() 
+	});
 });
 
 // グローバルなエラーハンドリング（予期せぬエラー用）

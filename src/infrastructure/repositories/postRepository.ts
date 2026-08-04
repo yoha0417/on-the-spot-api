@@ -49,7 +49,8 @@ export class PostRepository {
 						THEN true
 						ELSE false
 					END
-				`
+				`,
+				isMine: sql<boolean>`${posts.userId} = ${userId}`
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))
