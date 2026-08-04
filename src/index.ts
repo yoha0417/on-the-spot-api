@@ -9,9 +9,11 @@ import { createDb } from "./infrastructure/db/client";
 // ※ usersテーブルのスキーマパスは実際のファイル構成に合わせて調整してください
 import { users } from "./infrastructure/db/schema";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
+import { PostRepository } from "./infrastructure/repositories/postRepository";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
 import { postController } from "./interface/controllers/postController";
+import { GetTimelinePostsUsecase } from "./usecase/getTimelinePostsUsecase";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
@@ -63,6 +65,24 @@ app.get("/", async (c) => {
 app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/posts", postController);
+
+// New timeline endpoint
+app.get("/api/timeline", async (c) => {
+	const placeId = c.req.query("placeId");
+	if (!placeId) {
+		return c.json({ error: "placeId query parameter is required" }, 400);
+	}
+
+	// TODO: Replace with actual auth user ID
+	const userId = "temp-user-id"; 
+	
+	const db = c.get("db");
+	const postRepo = new PostRepository(db);
+	const usecase = new GetTimelinePostsUsecase(postRepo);
+	
+	const posts = await usecase.execute(placeId, userId);
+	return c.json({ posts });
+});
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {
