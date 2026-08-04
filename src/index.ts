@@ -11,6 +11,7 @@ import { users } from "./infrastructure/db/schema";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
+import { postController } from "./interface/controllers/postController";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
@@ -61,6 +62,7 @@ app.get("/", async (c) => {
 // これにより POST / へのリクエストが checkInController に流れます
 app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
+app.route("/api/posts", postController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {
