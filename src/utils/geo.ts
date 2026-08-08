@@ -1,8 +1,15 @@
+export interface BoundingBox {
+	minLat: number;
+	maxLat: number;
+	minLng: number;
+	maxLng: number;
+}
+
 export function getBoundingBox(
 	lat: number,
 	lng: number,
-	distanceInMeters: number = 50,
-): { minLat: number; maxLat: number; minLng: number; maxLng: number } {
+	distanceInMeters = 50,
+): BoundingBox {
 	const latRad = (lat * Math.PI) / 180;
 	const radius = 111319; // meters per degree of latitude
 
@@ -33,4 +40,14 @@ export function calculateHaversineDistance(
 	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
 	return 6371000 * c; // Earth radius in meters
+}
+
+export interface PlaceWithDistance {
+	id: string;
+	name: string;
+	latitude: number;
+	longitude: number;
+	distance: number;
+	createdAt?: Date;
+	updatedAt?: Date;
 }

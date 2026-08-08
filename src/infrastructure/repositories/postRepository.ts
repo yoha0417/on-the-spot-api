@@ -1,6 +1,6 @@
+import { and, desc, eq, isNotNull, lte, not, or, sql } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
 import { posts, visits } from "../db/schema";
-import { and, or, eq, not, isNotNull, lte, desc, sql } from "drizzle-orm";
 
 export class PostRepository {
 	constructor(private db: DbInstance) {}
@@ -32,7 +32,7 @@ export class PostRepository {
 	}) {
 		const { placeId, userId, currentTime } = params;
 		const thresholdTime = new Date(currentTime.getTime() - 30 * 60 * 1000); // 30分前
-		
+
 		return await this.db
 			.select({
 				id: posts.id,
@@ -50,7 +50,7 @@ export class PostRepository {
 						ELSE false
 					END
 				`,
-				isMine: sql<boolean>`${posts.userId} = ${userId}`
+				isMine: sql<boolean>`${posts.userId} = ${userId}`,
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))
@@ -63,17 +63,17 @@ export class PostRepository {
 						// 他人の即時公開投稿
 						and(
 							not(eq(posts.userId, userId)),
-							eq(posts.isDelayedPublish, false)
+							eq(posts.isDelayedPublish, false),
 						),
 						// 他人の遅延公開投稿（チェックアウトから30分以上経過）
 						and(
 							not(eq(posts.userId, userId)),
 							eq(posts.isDelayedPublish, true),
 							isNotNull(visits.checkedOutAt),
-							lte(visits.checkedOutAt, thresholdTime.toISOString())
-						)
-					)
-				)
+							lte(visits.checkedOutAt, thresholdTime.toISOString()),
+						),
+					),
+				),
 			)
 			.orderBy(desc(posts.createdAt));
 	}

@@ -3,17 +3,19 @@ import type {
 	ExecutionContext,
 	ScheduledEvent,
 } from "@cloudflare/workers-types";
+import { zValidator } from "@hono/zod-validator";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 import { createDb } from "./infrastructure/db/client";
 // ※ usersテーブルのスキーマパスは実際のファイル構成に合わせて調整してください
 import { users } from "./infrastructure/db/schema";
-import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { PostRepository } from "./infrastructure/repositories/postRepository";
+import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
+import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
-import { GetTimelinePostsUsecase } from "./usecase/getTimelinePostsUsecase";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
@@ -65,32 +67,7 @@ app.get("/", async (c) => {
 app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/posts", postController);
-
-// Timeline posts endpoint
-app.get("/api/posts", async (c) => {
-	const placeId = c.req.query("placeId");
-	if (!placeId) {
-		return c.json({ error: "placeId query parameter is required" }, 400);
-	}
-
-	// TODO: Replace with actual auth user ID
-	const userId = "temp-user-id"; 
-	const currentTime = new Date();
-	
-	const db = c.get("db");
-	const postRepo = new PostRepository(db);
-	
-	const posts = await postRepo.findTimelinePosts({
-		placeId,
-		userId,
-		currentTime
-	});
-	
-	return c.json({ 
-		posts,
-		currentTime: currentTime.toISOString() 
-	});
-});
+app.route("/api/places", placeController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {

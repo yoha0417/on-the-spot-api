@@ -49,3 +49,28 @@ postController.post(
 		return c.json({ success: true, post: result.post }, 201);
 	},
 );
+
+postController.get("/", async (c) => {
+	const placeId = c.req.query("placeId");
+	if (!placeId) {
+		return c.json({ error: "placeId query parameter is required" }, 400);
+	}
+
+	// TODO: Replace with actual auth user ID from JWT
+	const userId = "temp-user-id"; // eslint-disable-line no-magic-numbers
+	const currentTime = new Date();
+
+	const db = c.get("db");
+	const postRepo = new PostRepository(db);
+
+	const posts = await postRepo.findTimelinePosts({
+		placeId,
+		userId,
+		currentTime,
+	});
+
+	return c.json({
+		posts,
+		currentTime: currentTime.toISOString(),
+	});
+});

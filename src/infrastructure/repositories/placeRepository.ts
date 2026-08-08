@@ -30,4 +30,20 @@ export class PlaceRepository {
 
 		return place;
 	}
+
+	async findNearbyPlaces(lat: number, lng: number, radius = 3000) {
+		const { minLat, maxLat, minLng, maxLng } = getBoundingBox(lat, lng, radius);
+
+		const placesInBox = await this.db
+			.select()
+			.from(places)
+			.where(
+				and(
+					sql`${places.latitude} BETWEEN ${minLat} AND ${maxLat}`,
+					sql`${places.longitude} BETWEEN ${minLng} AND ${maxLng}`,
+				),
+			);
+
+		return placesInBox;
+	}
 }
