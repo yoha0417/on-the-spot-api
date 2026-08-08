@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `likes_count` integer DEFAULT 0 NOT NULL;

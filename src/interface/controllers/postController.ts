@@ -2,11 +2,15 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { DbInstance } from "../../infrastructure/db/client";
+import { LikeRepository } from "../../infrastructure/repositories/likeRepository";
 import { PostRepository } from "../../infrastructure/repositories/postRepository";
 import { VisitRepository } from "../../infrastructure/repositories/visitRepository";
 import { CreatePostUsecase } from "../../usecase/createPostUsecase";
+import { LikePostUsecase } from "../../usecase/likePostUsecase";
 
-export const postController = new Hono<{ Variables: { db: DbInstance } }>();
+export const postController = new Hono<{
+	Variables: { db: DbInstance; userId: string };
+}>();
 
 const createPostSchema = z.object({
 	content: z.string().min(1),
@@ -78,7 +82,7 @@ postController.get("/", async (c) => {
 // いいね機能追加
 postController.post("/:postId/like", async (c) => {
 	const postId = c.req.param("postId");
-	const userId = c.get("userId"); // authMiddlewareから取得
+	const userId = c.get("userId");
 	const db = c.get("db");
 
 	const likeRepo = new LikeRepository(db);
@@ -89,11 +93,13 @@ postController.post("/:postId/like", async (c) => {
 		const likesCount = await usecase.execute(postId, userId);
 		return c.json({ success: true, likesCount });
 	} catch (e) {
-		if (e.message === "Post not found") {
-			return c.json({ error: "Post not found" }, 404);
-		}
-		if (e.message === "Already liked") {
-			return c.json({ error: "Already liked" }, 409);
+		if (e instanceof Error) {
+			if (e.message === "Post not found") {
+				return c.json({ error: "Post not found" }, 404);
+			}
+			if (e.message === "Already liked") {
+				return c.json({ error: "Already liked" }, 409);
+			}
 		}
 		return c.json({ error: "Internal server error" }, 500);
 	}

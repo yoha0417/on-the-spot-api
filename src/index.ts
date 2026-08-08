@@ -18,11 +18,13 @@ import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 type Bindings = {
 	DB: D1Database; // wrangler.jsonc の binding 名と一致させる
 	JWT_SECRET: string;
+	useId: string;
 };
 
 type Variables = {
 	db: ReturnType<typeof createDb>; // Drizzleインスタンスの型
 	JWT_SECRET: string; // ここに string として定義！
+	useId: string;
 };
 
 // 型を適用してHonoインスタンスを作成

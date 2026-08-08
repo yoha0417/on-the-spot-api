@@ -46,7 +46,8 @@ authController.post(
 				201,
 			);
 		} catch (e) {
-			return c.json({ error: e.message }, 400);
+			const error = e instanceof Error ? e.message : "Registration failed";
+			return c.json({ error }, 400);
 		}
 	},
 );
@@ -77,6 +78,7 @@ authController.post("/login", zValidator("json", loginSchema), async (c) => {
 			},
 		});
 	} catch (e) {
-		return c.json({ error: e.message }, 401);
+		const error = e instanceof Error ? e.message : "Login failed";
+		return c.json({ error }, 401);
 	}
 });
