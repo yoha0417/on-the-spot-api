@@ -5,6 +5,21 @@ import { posts, visits } from "../db/schema";
 export class PostRepository {
 	constructor(private db: DbInstance) {}
 
+	async findByPostId(postId: string) {
+		const [post] = await this.db
+			.select()
+			.from(posts)
+			.where(eq(posts.id, postId));
+		return post;
+	}
+
+	async updateLikesCount(postId: string, count: number) {
+		await this.db
+			.update(posts)
+			.set({ likesCount: count })
+			.where(eq(posts.id, postId));
+	}
+
 	async createPost(data: {
 		userId: string;
 		placeId: string;

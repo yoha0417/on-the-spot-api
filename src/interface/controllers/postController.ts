@@ -74,3 +74,27 @@ postController.get("/", async (c) => {
 		currentTime: currentTime.toISOString(),
 	});
 });
+
+// いいね機能追加
+postController.post("/:postId/like", async (c) => {
+	const postId = c.req.param("postId");
+	const userId = c.get("userId"); // authMiddlewareから取得
+	const db = c.get("db");
+
+	const likeRepo = new LikeRepository(db);
+	const postRepo = new PostRepository(db);
+	const usecase = new LikePostUsecase(likeRepo, postRepo);
+
+	try {
+		const likesCount = await usecase.execute(postId, userId);
+		return c.json({ success: true, likesCount });
+	} catch (e) {
+		if (e.message === "Post not found") {
+			return c.json({ error: "Post not found" }, 404);
+		}
+		if (e.message === "Already liked") {
+			return c.json({ error: "Already liked" }, 409);
+		}
+		return c.json({ error: "Internal server error" }, 500);
+	}
+});

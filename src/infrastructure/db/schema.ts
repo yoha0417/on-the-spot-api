@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
 	passwordHash: text("password_hash").notNull(),
 	name: text("name").notNull(),
 	createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+	likesCount: integer("likes_count").default(0).notNull(),
 });
 
 export const places = sqliteTable("places", {
