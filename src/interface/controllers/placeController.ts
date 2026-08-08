@@ -5,7 +5,6 @@ import type { DbInstance } from "../../infrastructure/db/client";
 import { PlaceRepository } from "../../infrastructure/repositories/placeRepository";
 import { calculateHaversineDistance } from "../../utils/geo";
 
-// Variablesの型を定義して c.get('db') でエラーが出ないようにする
 export const placeController = new Hono<{ Variables: { db: DbInstance } }>();
 
 placeController.get(
@@ -13,9 +12,18 @@ placeController.get(
 	zValidator(
 		"query",
 		z.object({
-			lat: z.number(),
-			lng: z.number(),
-			radius: z.number().optional().default(3000),
+			lat: z.coerce.number().refine((val) => !Number.isNaN(val), {
+				message: "Latitude must be a valid number",
+			}),
+			lng: z.coerce.number().refine((val) => !Number.isNaN(val), {
+				message: "Longitude must be a valid number",
+			}),
+			radius: z.coerce
+				.number()
+				.min(100, "Radius must be at least 100 meters")
+				.max(10000, "Radius cannot exceed 10,000 meters")
+				.optional()
+				.default(3000),
 		}),
 	),
 	async (c) => {

@@ -106,5 +106,38 @@ Cloudflare D1環境での三角関数の互換性問題を避けるため、以�
 4. 取得したスポット一覧を `react-native-maps` の `<Marker>` コンポーネントとして地図上にマッピングする。
    - ユーザーの現在地がわかるように、自分の位置にも特別なマーカー（または `showsUserLocation={true}` の設定）を表示すること。
 
-#### 5-2. チェックイン候補取得
-- 現在地から50m以内のスポットのみを返し、ユーザーが「今チェックインできる場所」を選択するUIに利用する。
+#### 5-2. 認証機能
+# 目的
+Hono + Cloudflare D1環境において、JWTを用いた簡易的なユーザー認証APIとミドルウェアを実装してください。
+
+# 前提
+- 使用パッケージ: Hono標準の `hono/jwt` を使用すること。
+- パスワードのハッシュ化: Cloudflare Workers（Edge環境）で動くため、Node.jsネイティブの `bcrypt` は使用不可です。代わりにWeb Crypto API（`crypto.subtle.digest` でのSHA-256等）か、純粋なJSライブラリ（`bcryptjs` 等）を使用してください。（ハッカソンのMVPなので、簡易的なハッシュ化で構いません）
+- JWTシークレット: 環境変数 `JWT_SECRET`（`c.env.JWT_SECRET`）を使用すること。
+
+# 実装要件1: 認証用コントローラーの作成
+新規ファイル `src/interface/controllers/authController.ts` を作成し、以下の2つのエンドポイントを実装してください。
+※ `@hono/zod-validator` を使ってリクエストのバリデーションを行うこと。
+
+1. **ユーザー登録 (`POST /register`)**
+   - リクエスト: `{ "email": "...", "password": "...", "name": "..." }`
+   - 処理: パスワードをハッシュ化し、`users` テーブルに保存。
+   - レスポンス: 発行したJWTトークン (`token`) とユーザー情報を返す。
+
+2. **ログイン (`POST /login`)**
+   - リクエスト: `{ "email": "...", "password": "..." }`
+   - 処理: DBからユーザーを検索し、パスワードのハッシュ値が一致するか検証。
+   - レスポンス: 成功時にJWTトークン (`token`) を返す。
+
+# 実装要件2: JWT認証ミドルウェアの作成
+新規ファイル `src/middleware/authMiddleware.ts` を作成してください。
+
+- クライアントから送られてくる `Authorization: Bearer <token>` ヘッダーを取得。
+- `hono/jwt` の `verify` 関数を使ってトークンを検証。
+- 検証に成功した場合、ペイロードから `userId` を取り出し、`c.set("userId", userId)` としてコンテキストに保存し、`next()` を呼び出す。
+- トークンが無い、または不正な場合は `401 Unauthorized` を返す。
+
+# 実装要件3: ルーティングへの適用
+`index.ts` (または親ルーター) を以下のように更新してください。
+1. `/api/auth` パスに `authController` を登録。
+2. これまで開発用に使っていた「仮のヘッダーからuserIdを取得するミドルウェア」を削除し、今回作成した `authMiddleware` を `/api/checkin` や `/api/posts` などの要認証ルートに適用する。

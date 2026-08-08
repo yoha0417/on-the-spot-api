@@ -3,67 +3,60 @@ import type {
 	ExecutionContext,
 	ScheduledEvent,
 } from "@cloudflare/workers-types";
-import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { createDb } from "./infrastructure/db/client";
-// ※ usersテーブルのスキーマパスは実際のファイル構成に合わせて調整してください
-import { users } from "./infrastructure/db/schema";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
+import { authController } from "./interface/controllers/authController";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
 import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
+import { authMiddleware } from "./middleware/authMiddleware";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
 type Bindings = {
 	DB: D1Database; // wrangler.jsonc の binding 名と一致させる
+	JWT_SECRET: string;
 };
 
 type Variables = {
 	db: ReturnType<typeof createDb>; // Drizzleインスタンスの型
+	JWT_SECRET: string; // ここに string として定義！
 };
 
 // 型を適用してHonoインスタンスを作成
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Middleware to initialize DB connection
+// Middleware to initialize DB connection and JWT secret
 app.use(async (c, next) => {
-	// 修正箇所: D1_DATABASE ではなく DB を参照する
 	const db = c.env?.DB;
+	const secret = c.env?.JWT_SECRET;
 
-	if (!db) {
-		return c.text("D1 database not initialized", 500);
+	if (!db || !secret) {
+		return c.text("Configuration error", 500);
 	}
 
 	// Create Drizzle instance and set to context
 	c.set("db", createDb(db));
+	c.set("JWT_SECRET", secret as string);
 	await next();
 });
 
-// Test endpoint
-app.get("/", async (c) => {
-	const db = c.get("db");
+// --- 1. ミドルウェアの適用 ---
+// ※ 末尾の /* を忘れないように注意してください！
+app.use("/api/checkin/*", authMiddleware);
+app.use("/api/heartbeat/*", authMiddleware);
+app.use("/api/posts/*", authMiddleware);
 
-	try {
-		// Simple user count query
-		const [result] = await db.select({ count: sql`COUNT(*)` }).from(users);
-		return c.json({ userCount: result?.count || 0 });
-	} catch (error) {
-		// DBクエリ実行時のエラーをターミナルに表示
-		console.error("[Database Error]", error);
-		return c.json(
-			{ error: "Database error", details: (error as Error).message },
-			500,
-		);
-	}
-});
-
-// 2. コントローラーをルートに登録！
-// これにより POST / へのリクエストが checkInController に流れます
+// --- 2. コントローラーの登録 ---
+// 認証が必要なルート (上でミドルウェアを通ってからここに来る)
 app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/posts", postController);
+
+// パブリックなルート (上に app.use が無いのでそのまま通る)
+app.route("/api/auth", authController);
 app.route("/api/places", placeController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）

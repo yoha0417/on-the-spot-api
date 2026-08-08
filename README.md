@@ -114,3 +114,61 @@ Cloudflare Workersの制限（メモリ・CPU）を考慮し、DB側での事前
 ## 開発上の制約事項
 - **オーバーエンジニアリングの回避**: ハッカソンに間に合う「実用的な（Pragmatic）」コードを心がけます。
 - **外部ライブラリの制限**: エッジ環境（Cloudflare Workers）で動作させるため、Node.js依存のネイティブモジュールは使用しません。距離計算用の外部ライブラリ（`geolib`など）も使用せず、`src/utils/geo.ts` 等に自前で軽量なロジックを実装します。
+
+認証API（登録とログイン）のテストが完全に成功しましたね！無事にJWTトークンが発行されているのが確認できます。これでAPIのセキュリティ基盤が整いました。
+
+プロジェクトの `README.md` に記載するためのマークダウンを用意しました。APIのドキュメントとして、以下の内容をそのままコピーして貼り付けてください。
+
+## 動作確認（テストユーザーの作成とログイン）
+
+APIの認証機能（JWT）をテストするためのコマンド一覧です。
+取得した `token` は、認証が必要なエンドポイント（チェックイン、投稿など）にリクエストを送る際、HTTPヘッダーに `Authorization: Bearer <token>` として含めて使用します。
+
+### 1. テストユーザーの登録 (Register)
+新規にテストユーザーを作成し、初期トークンを取得します。
+
+```bash
+curl -X POST http://localhost:8787/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test2@example.com","password":"secure123","name":"Test User"}'
+
+```
+
+**レスポンス例:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5c...",
+  "user": {
+    "id": "6afe6a01-7c0a-4a09-bedf-157ec855d619",
+    "email": "test2@example.com",
+    "name": "Test User"
+  }
+}
+
+```
+
+### 2. ログイン (Login)
+
+作成済みのテストユーザーでログインし、JWTトークンを再取得します。
+
+```bash
+curl -X POST http://localhost:8787/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test2@example.com","password":"secure123"}'
+
+```
+
+**レスポンス例:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5c...",
+  "user": {
+    "id": "6afe6a01-7c0a-4a09-bedf-157ec855d619",
+    "email": "test2@example.com",
+    "name": "Test User"
+  }
+}
+
+```

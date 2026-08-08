@@ -1,4 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
+import { getBoundingBox } from "../../utils/geo";
 import type { DbInstance } from "../db/client";
 import { places } from "../db/schema";
 
