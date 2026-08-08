@@ -3,14 +3,11 @@ import type {
 	ExecutionContext,
 	ScheduledEvent,
 } from "@cloudflare/workers-types";
-import { zValidator } from "@hono/zod-validator";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { createDb } from "./infrastructure/db/client";
 // ※ usersテーブルのスキーマパスは実際のファイル構成に合わせて調整してください
 import { users } from "./infrastructure/db/schema";
-import { PostRepository } from "./infrastructure/repositories/postRepository";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
