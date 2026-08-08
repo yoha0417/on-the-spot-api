@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, lte, not, or, sql } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { posts, visits } from "../db/schema";
+import { likes, places, posts, visits } from "../db/schema";
 
 export class PostRepository {
 	constructor(private db: DbInstance) {}
@@ -40,6 +40,36 @@ export class PostRepository {
 		return result;
 	}
 
+	async findUserPosts(userId: string, currentTime: Date) {
+		const thresholdTime = new Date(currentTime.getTime() - 30 * 60 * 1000); // 30分前
+		return await this.db
+			.select({
+				id: posts.id,
+				userId: posts.userId,
+				placeId: posts.placeId,
+				visitId: posts.visitId,
+				content: posts.content,
+				isDelayedPublish: posts.isDelayedPublish,
+				createdAt: posts.createdAt,
+				likesCount: posts.likesCount,
+				placeName: places.name,
+				placeAddress: places.address,
+				isWaitingForUnlock: sql<boolean>`
+					CASE
+						WHEN ${posts.userId} = ${userId} AND ${posts.isDelayedPublish} = true AND 
+							 (${visits.checkedOutAt} IS NULL OR ${visits.checkedOutAt} > ${thresholdTime.toISOString()})
+						THEN true
+						ELSE false
+					END
+				`,
+			})
+			.from(posts)
+			.leftJoin(visits, eq(posts.visitId, visits.id))
+			.leftJoin(places, eq(posts.placeId, places.id))
+			.where(eq(posts.userId, userId))
+			.orderBy(desc(posts.createdAt));
+	}
+
 	async findTimelinePosts(params: {
 		placeId: string;
 		userId: string;
@@ -66,6 +96,13 @@ export class PostRepository {
 					END
 				`,
 				isMine: sql<boolean>`${posts.userId} = ${userId}`,
+				likesCount: posts.likesCount,
+				isLiked: sql<boolean>`
+					EXISTS (
+						SELECT 1 FROM ${likes} 
+						WHERE ${likes.postId} = ${posts.id} AND ${likes.userId} = ${userId}
+					)
+				`,
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))

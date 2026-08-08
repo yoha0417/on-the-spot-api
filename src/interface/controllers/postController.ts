@@ -79,6 +79,20 @@ postController.get("/", async (c) => {
 	});
 });
 
+// ユーザーの投稿を取得
+postController.get("/user/:userId", async (c) => {
+	const userId = c.req.param("userId");
+	const db = c.get("db");
+	const postRepo = new PostRepository(db);
+	const currentTime = new Date();
+
+	const userPosts = await postRepo.findUserPosts(userId, currentTime);
+
+	return c.json({
+		posts: userPosts,
+	});
+});
+
 // いいね機能追加
 postController.post("/:postId/like", async (c) => {
 	const postId = c.req.param("postId");
