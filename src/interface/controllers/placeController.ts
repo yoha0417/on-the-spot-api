@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { DbInstance } from "../../infrastructure/db/client";
 import { PlaceRepository } from "../../infrastructure/repositories/placeRepository";
-import { calculateHaversineDistance } from "../../utils/geo";
+import { PlaceUsecase } from "../../usecase/placeUsecase";
 
 export const placeController = new Hono<{ Variables: { db: DbInstance } }>();
 
@@ -20,7 +20,7 @@ placeController.get(
 			}),
 			radius: z.coerce
 				.number()
-				.min(100, "Radius must be at least 100 meters")
+				.min(0, "Radius must be at least 0 meters")
 				.max(10000, "Radius cannot exceed 10,000 meters")
 				.optional()
 				.default(3000),
@@ -33,26 +33,12 @@ placeController.get(
 			throw new Error("DB instance is missing in Hono context");
 		}
 		const placeRepo = new PlaceRepository(db);
+		const usecase = new PlaceUsecase(placeRepo);
 
-		// Step 1: Get places within bounding box
-		const placesInBox = await placeRepo.findNearbyPlaces(lat, lng, radius);
-
-		// Step 2: Calculate exact distance and filter
-		const placesWithDistance = placesInBox
-			.map((place) => ({
-				...place,
-				distance: calculateHaversineDistance(
-					lat,
-					lng,
-					place.latitude,
-					place.longitude,
-				),
-			}))
-			.filter((place) => place.distance <= radius)
-			.sort((a, b) => a.distance - b.distance);
+		const places = await usecase.execute(lat, lng, radius);
 
 		return c.json({
-			places: placesWithDistance,
+			places,
 			currentLocation: { lat, lng },
 			radius,
 		});

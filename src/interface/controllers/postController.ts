@@ -7,6 +7,7 @@ import { PostRepository } from "../../infrastructure/repositories/postRepository
 import { VisitRepository } from "../../infrastructure/repositories/visitRepository";
 import { CreatePostUsecase } from "../../usecase/createPostUsecase";
 import { LikePostUsecase } from "../../usecase/likePostUsecase";
+import { PostUsecase } from "../../usecase/postUsecase";
 
 export const postController = new Hono<{
 	Variables: { db: DbInstance; userId: string };
@@ -66,12 +67,13 @@ postController.get("/", async (c) => {
 
 	const db = c.get("db");
 	const postRepo = new PostRepository(db);
+	const postUsecase = new PostUsecase(postRepo);
 
-	const posts = await postRepo.findTimelinePosts({
+	const posts = await postUsecase.executeGetTimelinePosts(
 		placeId,
 		userId,
 		currentTime,
-	});
+	);
 
 	return c.json({
 		posts,
@@ -84,9 +86,10 @@ postController.get("/user/:userId", async (c) => {
 	const userId = c.req.param("userId");
 	const db = c.get("db");
 	const postRepo = new PostRepository(db);
+	const postUsecase = new PostUsecase(postRepo);
 	const currentTime = new Date();
 
-	const userPosts = await postRepo.findUserPosts(userId, currentTime);
+	const userPosts = await postUsecase.execute(userId, currentTime);
 
 	return c.json({
 		posts: userPosts,
