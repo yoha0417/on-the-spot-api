@@ -1,3 +1,67 @@
+# 開発者向けガイドライン
+
+## コントローラ作成時の原則
+
+1. コントローラでは:
+   - リクエストのバリデーションのみ行う
+   - ビジネスロジックを書かない
+   - Usecaseを呼び出して結果を返す
+   - エラーハンドリングを行う
+
+2. 良いコントローラの例:
+```typescript
+postController.get("/", async (c) => {
+  const { placeId } = c.req.valid("query");
+  const usecase = new PostUsecase(new PostRepository(db));
+  const posts = await usecase.execute(placeId);
+  return c.json({ posts });
+});
+```
+
+## Usecase作成時の原則
+
+1. Usecaseでは:
+   - 1つのビジネスユースケースを実装
+   - 複数リポジトリを協調させる
+   - トランザクション管理を行う
+   - ドメインルールを適用する
+
+2. 良いUsecaseの例:
+```typescript
+class CreatePostUsecase {
+  async execute(data: CreatePostInput) {
+    // チェックイン済みか確認
+    const visited = await this.visitRepo.findActiveVisit(data);
+    if (!visited) throw new Error("Not checked in");
+    
+    // 投稿作成
+    return this.postRepo.create(data);
+  }
+}
+```
+
+## リポジトリ作成時の原則
+
+1. リポジトリでは:
+   - 1つのデータソースへのアクセスを担当
+   - 複雑なクエリを実装
+   - キャッシュ戦略を実装
+   - ドメインオブジェクトを返す
+
+2. 良いリポジトリの例:
+```typescript
+class PostRepository {
+  async findTimelinePosts(params: FindPostsParams) {
+    return this.db.query(
+      `SELECT * FROM posts 
+       WHERE place_id = $1
+       AND created_at <= $2`,
+      [params.placeId, params.currentTime]
+    );
+  }
+}
+```
+
 ## Developer Commands
 - `npm install` to set up dependencies
 - `npm run dev` to start development server
