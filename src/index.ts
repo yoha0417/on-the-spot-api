@@ -4,6 +4,8 @@ import type {
 	ScheduledEvent,
 } from "@cloudflare/workers-types";
 import { Hono } from "hono";
+// import { swaggerUI } from '@hono/swagger-ui';
+// import { openApiSchema } from './openapi';
 import { createDb } from "./infrastructure/db/client";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { authController } from "./interface/controllers/authController";
@@ -66,6 +68,12 @@ app.onError((err, c) => {
 	console.error(`[Global Error] ${err.message}`);
 	console.error(err.stack);
 	return c.text("Internal Server Error", 500);
+});
+
+app.get("/docs", swaggerUI({ url: "/openapi.json" }));
+
+app.get("/openapi.json", (c) => {
+	return c.json(openApiSchema);
 });
 
 export default {
