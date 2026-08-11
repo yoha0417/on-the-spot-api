@@ -131,6 +131,18 @@ npx wrangler d1 migrations apply DB --local
 npx tsx scripts/seed.ts
 ```
 
+### 公園データのシード
+
+新宿区公園一覧のCSVからシード用SQLを生成し、ローカルDBに適用します。
+
+```bash
+# 1. SQLファイルの生成
+npx tsx scripts/generate-park-seed-sql.ts
+
+# 2. ローカルDBへの適用
+npx wrangler d1 execute DB --local --file=drizzle/seed_parks.sql
+```
+
 ## 主要機能の実装仕様
 
 ### 位置情報チェックイン/チェックアウト（ハイブリッド判定方式）
