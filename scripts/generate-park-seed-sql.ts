@@ -15,6 +15,7 @@ const records: ParkCsvRow[] = parse(csvContent, {
   bom: true,
   relaxColumnCount: true,
   trim: true,   // 前後の空白を除去
+  relax_quotes: true, // 不正なクォートを許容
 }) as ParkCsvRow[];
 console.log(`📄 CSVパース結果: ${records.length} 行`);
 
