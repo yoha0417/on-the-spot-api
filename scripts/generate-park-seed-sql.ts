@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { parse } from "csv-parse/sync";
+import { randomUUID } from "crypto";
 
 interface ParkCsvRow {
   "名称": string;
@@ -36,14 +37,15 @@ for (const row of records) {
 
   const escapedName = (name ?? "").replace(/'/g, "''");
   const escapedAddress = (address ?? "").replace(/'/g, "''");
+  const uuid = randomUUID();
 
   inserts.push(
-    `('${escapedName}', ${latitude}, ${longitude}, '${escapedAddress}')`,
+    `('${uuid}', '${escapedName}', ${latitude}, ${longitude}, '${escapedAddress}')`,
   );
 }
 
 const sql = `-- 新宿区公園一覧シードデータ
-INSERT OR IGNORE INTO places (name, latitude, longitude, address) VALUES
+INSERT OR IGNORE INTO places (id, name, latitude, longitude, address) VALUES
 ${inserts.join(",\n")};
 `;
 
