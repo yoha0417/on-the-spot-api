@@ -3,9 +3,8 @@ import type {
 	ExecutionContext,
 	ScheduledEvent,
 } from "@cloudflare/workers-types";
+import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
-// import { swaggerUI } from '@hono/swagger-ui';
-// import { openApiSchema } from './openapi';
 import { createDb } from "./infrastructure/db/client";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { authController } from "./interface/controllers/authController";
@@ -14,6 +13,7 @@ import { heartbeatController } from "./interface/controllers/heartbeatController
 import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
 import { authMiddleware } from "./middleware/authMiddleware";
+import { openApiSchema } from "./openapi";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 
 // Cloudflare Workersの環境変数とHonoコンテキストの型定義
@@ -70,8 +70,10 @@ app.onError((err, c) => {
 	return c.text("Internal Server Error", 500);
 });
 
+// Swagger UI
 app.get("/docs", swaggerUI({ url: "/openapi.json" }));
 
+// OpenAPI仕様
 app.get("/openapi.json", (c) => {
 	return c.json(openApiSchema);
 });
