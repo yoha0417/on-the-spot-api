@@ -1,6 +1,3 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { z } from "zod";
-
 export const openApiSchema = {
 	openapi: "3.0.0",
 	info: {
