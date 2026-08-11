@@ -8,16 +8,16 @@ interface ParkCsvRow {
   "所在地_連結表記": string;
 }
 
-const csvContent = fs.readFileSync("docs/新宿区公園一覧.csv", "utf8")
-  .replace(/"/g, ''); // クォート不正エラーを防ぐため全ダブルクォートを除去
+const csvContent = fs.readFileSync("docs/新宿区公園一覧.csv", "utf8");
 
 const records: ParkCsvRow[] = parse(csvContent, {
   columns: true,
   skip_empty_lines: true,
   bom: true,
   relaxColumnCount: true,
-  trim: true,   // 前後の空白を除去
-  quote: false, // ダブルクォート処理を無効化
+  trim: true,
+  relax_quotes: true,
+  skip_records_with_error: true,
 }) as ParkCsvRow[];
 console.log(`📄 CSVパース結果: ${records.length} 行`);
 
