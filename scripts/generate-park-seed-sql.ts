@@ -1,9 +1,19 @@
 import { parse } from "csv-parse/sync";
 import * as fs from "fs";
 
+interface ParkCsvRow {
+	名称: string;
+
+	緯度: string;
+
+	経度: string;
+
+	所在地_連結表記: string;
+}
+
 const csvContent = fs.readFileSync("docs/新宿区公園一覧.csv", "utf8");
 
-const records = parse(csvContent, {
+const records: ParkCsvRow[] = parse(csvContent, {
 	columns: true,
 
 	skip_empty_lines: true,
@@ -11,7 +21,7 @@ const records = parse(csvContent, {
 	bom: true,
 
 	relaxColumnCount: true,
-});
+}) as ParkCsvRow[];
 
 const inserts: string[] = [];
 
