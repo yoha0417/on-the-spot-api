@@ -63,8 +63,7 @@ postController.get("/", async (c) => {
 		return c.json({ error: "placeId query parameter is required" }, 400);
 	}
 
-	// TODO: Replace with actual auth user ID from JWT
-	const userId = "temp-user-id"; // eslint-disable-line no-magic-numbers
+	const userId = c.get("userId");
 	const currentTime = new Date();
 
 	const db = c.get("db");
