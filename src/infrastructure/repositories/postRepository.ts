@@ -76,6 +76,7 @@ export class PostRepository {
 		currentTime: Date;
 	}) {
 		const { placeId, userId, currentTime } = params;
+		const currentTimeIso = currentTime.toISOString();
 		const thresholdTime = new Date(currentTime.getTime() - 30 * 60 * 1000); // 30分前
 
 		return await this.db
@@ -94,6 +95,14 @@ export class PostRepository {
 						THEN true
 						ELSE false
 					END
+				`,
+				stayDurationMinutes: sql<number>`
+					ROUND(
+						(
+							julianday(COALESCE(${visits.checkedOutAt}, ${currentTimeIso}))
+							- julianday(${visits.checkedInAt})
+						) * 24 * 60
+					)
 				`,
 				isMine: sql<boolean>`${posts.userId} = ${userId}`,
 				likesCount: posts.likesCount,

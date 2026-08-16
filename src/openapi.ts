@@ -439,7 +439,41 @@ export const openApiSchema = {
 									properties: {
 										posts: {
 											type: "array",
-											items: { $ref: "#/components/schemas/Post" },
+											items: {
+												type: "object",
+												properties: {
+													id: { type: "string", format: "uuid" },
+													userId: { type: "string", format: "uuid" },
+													placeId: { type: "string", format: "uuid" },
+													visitId: { type: "string", format: "uuid" },
+													content: { type: "string" },
+													isDelayedPublish: { type: "boolean" },
+													createdAt: { type: "string", format: "date-time" },
+													isWaitingForUnlock: { type: "boolean" },
+													stayDurationMinutes: {
+														type: "number",
+														description:
+															"その投稿の元となった訪問の滞在時間（分）。チェックアウトしていない場合は現在時刻までの時間。",
+													},
+													isMine: { type: "boolean" },
+													likesCount: { type: "integer" },
+													isLiked: { type: "boolean" },
+												},
+												required: [
+													"id",
+													"userId",
+													"placeId",
+													"visitId",
+													"content",
+													"isDelayedPublish",
+													"createdAt",
+													"isWaitingForUnlock",
+													"stayDurationMinutes",
+													"isMine",
+													"likesCount",
+													"isLiked",
+												],
+											},
 										},
 										currentTime: {
 											type: "string",
