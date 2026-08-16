@@ -267,6 +267,67 @@ export const openApiSchema = {
 				},
 			},
 		},
+		"/api/checkout": {
+			post: {
+				tags: ["チェックイン"],
+				summary: "手動チェックアウト",
+				description:
+					"現在滞在中の場所から明示的にチェックアウトします。JWT認証が必要です。",
+				security: [{ BearerAuth: [] }],
+				requestBody: {
+					required: true,
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									placeId: {
+										type: "string",
+										description: "チェックアウトする場所のID",
+										example: "some-uuid",
+									},
+								},
+								required: ["placeId"],
+							},
+						},
+					},
+				},
+				responses: {
+					"200": {
+						description: "チェックアウト成功",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										success: { type: "boolean", enum: [true] },
+									},
+								},
+							},
+						},
+					},
+					"400": {
+						description: "バリデーションエラー",
+					},
+					"401": {
+						description: "認証エラー",
+					},
+					"404": {
+						description: "アクティブな滞在が見つからない、または既にチェックアウト済み",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										error: { type: "string" },
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"/api/places/nearby": {
 			get: {
 				tags: ["場所"],

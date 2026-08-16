@@ -10,6 +10,7 @@ import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { authController } from "./interface/controllers/authController";
 import { checkInController } from "./interface/controllers/checkInController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
+import { checkoutController } from "./interface/controllers/checkoutController";
 import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
 import { authMiddleware } from "./middleware/authMiddleware";
@@ -51,6 +52,7 @@ app.use(async (c, next) => {
 // ※ 末尾の /* を忘れないように注意してください！
 app.use("/api/checkin/*", authMiddleware);
 app.use("/api/heartbeat/*", authMiddleware);
+app.use("/api/checkout/*", authMiddleware);
 app.use("/api/posts/*", authMiddleware);
 app.use("/api/places/*", authMiddleware);
 
@@ -58,6 +60,7 @@ app.use("/api/places/*", authMiddleware);
 // 認証が必要なルート (上でミドルウェアを通ってからここに来る)
 app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
+app.route("/api/checkout", checkoutController);
 app.route("/api/posts", postController);
 app.route("/api/places", placeController);
 
