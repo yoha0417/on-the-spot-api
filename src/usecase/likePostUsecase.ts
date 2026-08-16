@@ -14,22 +14,18 @@ export class LikePostUsecase {
 			throw new Error("Post not found");
 		}
 
-		// 重複いいねチェック
-		// すでにいいねしていたらいいね削除
+		// すでにいいねしていたらいいね削除（トグル動作）
 		if (await this.likeRepo.hasLiked(postId, userId)) {
-			this.likeRepo.deleteLike(postId, userId);
-			// いいね数更新
+			await this.likeRepo.deleteLike(postId, userId);
 			const likesCount = await this.likeRepo.getLikesCount(postId);
 			await this.postRepo.updateLikesCount(postId, likesCount);
+			return likesCount;
 		}
 
 		// いいね作成
 		await this.likeRepo.createLike(postId, userId);
-
-		// いいね数更新
 		const likesCount = await this.likeRepo.getLikesCount(postId);
 		await this.postRepo.updateLikesCount(postId, likesCount);
-
 		return likesCount;
 	}
 }

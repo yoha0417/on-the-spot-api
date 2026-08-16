@@ -328,6 +328,50 @@ export const openApiSchema = {
 				},
 			},
 		},
+		"/api/posts/{postId}/like": {
+			post: {
+				tags: ["投稿"],
+				summary: "投稿にいいね（トグル）",
+				description:
+					"指定された投稿に対していいねをトグルします。既にいいね済みの場合は取り消し、未いいねの場合は追加します。JWT認証が必要です。",
+				security: [{ BearerAuth: [] }],
+				parameters: [
+					{
+						name: "postId",
+						in: "path",
+						required: true,
+						description: "いいね対象の投稿ID",
+						schema: { type: "string", example: "some-uuid" },
+					},
+				],
+				responses: {
+					"200": {
+						description: "いいね成功（追加または削除）",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										success: { type: "boolean", enum: [true] },
+										likesCount: {
+											type: "number",
+											description: "更新後のいいね数",
+										},
+									},
+									required: ["success", "likesCount"],
+								},
+							},
+						},
+					},
+					"401": {
+						description: "認証エラー",
+					},
+					"404": {
+						description: "投稿が見つからない",
+					},
+				},
+			},
+		},
 		"/api/places/nearby": {
 			get: {
 				tags: ["場所"],
