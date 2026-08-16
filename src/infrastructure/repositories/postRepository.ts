@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, lte, not, or, sql } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { likes, places, posts, visits } from "../db/schema";
+import { likes, places, posts, users, visits } from "../db/schema";
 
 export class PostRepository {
 	constructor(private db: DbInstance) {}
@@ -112,9 +112,11 @@ export class PostRepository {
 						WHERE ${likes.postId} = ${posts.id} AND ${likes.userId} = ${userId}
 					)
 				`,
+				userName: users.name,
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))
+			.leftJoin(users, eq(posts.userId, users.id))
 			.where(
 				and(
 					eq(posts.placeId, placeId),

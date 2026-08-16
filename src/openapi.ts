@@ -458,6 +458,7 @@ export const openApiSchema = {
 													isMine: { type: "boolean" },
 													likesCount: { type: "integer" },
 													isLiked: { type: "boolean" },
+													userName: { type: "string" },
 												},
 												required: [
 													"id",
@@ -472,6 +473,7 @@ export const openApiSchema = {
 													"isMine",
 													"likesCount",
 													"isLiked",
+													"userName",
 												],
 											},
 										},
