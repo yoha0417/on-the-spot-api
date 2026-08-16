@@ -13,6 +13,32 @@ export const openApiSchema = {
 				bearerFormat: "JWT",
 			},
 		},
+		schemas: {
+			Post: {
+				type: "object",
+				properties: {
+					id: { type: "string", format: "uuid" },
+					userId: { type: "string", format: "uuid" },
+					placeId: { type: "string", format: "uuid" },
+					visitId: { type: "string", format: "uuid" },
+					content: { type: "string" },
+					imageUrl: { type: "string", nullable: true },
+					isDelayedPublish: { type: "boolean" },
+					likesCount: { type: "integer" },
+					createdAt: { type: "string", format: "date-time" },
+				},
+				required: [
+					"id",
+					"userId",
+					"placeId",
+					"visitId",
+					"content",
+					"isDelayedPublish",
+					"likesCount",
+					"createdAt",
+				],
+			},
+		},
 	},
 	paths: {
 		"/api/auth/register": {
@@ -324,6 +350,152 @@ export const openApiSchema = {
 								},
 							},
 						},
+					},
+				},
+			},
+		},
+		"/api/posts": {
+			post: {
+				tags: ["投稿"],
+				summary: "投稿を作成",
+				description:
+					"チェックイン済みの場所に対して投稿を作成します。JWT認証が必要です。",
+				security: [{ BearerAuth: [] }],
+				requestBody: {
+					required: true,
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									content: { type: "string", example: "今日は晴れています" },
+									placeId: { type: "string", format: "uuid" },
+									is_delayed_publish: { type: "boolean", example: false },
+								},
+								required: ["content", "placeId", "is_delayed_publish"],
+							},
+						},
+					},
+				},
+				responses: {
+					"201": {
+						description: "投稿作成成功",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										success: { type: "boolean", enum: [true] },
+										post: { $ref: "#/components/schemas/Post" },
+									},
+									required: ["success", "post"],
+								},
+							},
+						},
+					},
+					"400": {
+						description: "バリデーションエラー",
+					},
+					"401": {
+						description: "認証エラー",
+					},
+					"404": {
+						description: "チェックインしていない場所への投稿",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										error: { type: "string" },
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			get: {
+				tags: ["投稿"],
+				summary: "場所のタイムライン投稿を取得",
+				description:
+					"指定された placeId のタイムライン投稿を取得します。JWT認証が必要です。",
+				security: [{ BearerAuth: [] }],
+				parameters: [
+					{
+						name: "placeId",
+						in: "query",
+						required: true,
+						description: "タイムラインを取得する場所のID",
+						schema: { type: "string", format: "uuid" },
+					},
+				],
+				responses: {
+					"200": {
+						description: "投稿一覧",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										posts: {
+											type: "array",
+											items: { $ref: "#/components/schemas/Post" },
+										},
+										currentTime: {
+											type: "string",
+											format: "date-time",
+										},
+									},
+									required: ["posts", "currentTime"],
+								},
+							},
+						},
+					},
+					"400": {
+						description: "placeId クエリパラメータが不足",
+					},
+					"401": {
+						description: "認証エラー",
+					},
+				},
+			},
+		},
+		"/api/posts/user/{userId}": {
+			get: {
+				tags: ["投稿"],
+				summary: "ユーザーの投稿一覧を取得",
+				description:
+					"指定された userId の投稿一覧を取得します。JWT認証が必要です。",
+				security: [{ BearerAuth: [] }],
+				parameters: [
+					{
+						name: "userId",
+						in: "path",
+						required: true,
+						description: "投稿を取得するユーザーID",
+						schema: { type: "string", format: "uuid" },
+					},
+				],
+				responses: {
+					"200": {
+						description: "投稿一覧",
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										posts: {
+											type: "array",
+											items: { $ref: "#/components/schemas/Post" },
+										},
+									},
+									required: ["posts"],
+								},
+							},
+						},
+					},
+					"401": {
+						description: "認証エラー",
 					},
 				},
 			},
