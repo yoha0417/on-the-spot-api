@@ -7,7 +7,8 @@ import { VisitRepository } from "../../infrastructure/repositories/visitReposito
 import { HeartbeatUsecase } from "../../usecase/heartbeatUsecase";
 
 export const heartbeatController = new Hono<{
-	Variables: { db: DbInstance };
+	Bindings: { JWT_SECRET: string };
+	Variables: { db: DbInstance; userId: string };
 }>();
 
 const heartbeatSchema = z.object({
@@ -36,11 +37,13 @@ heartbeatController.post(
 			throw new Error("DB instance is missing in Hono context");
 		}
 
+		const userId = c.get("userId");
+
 		const placeRepository = new PlaceRepository(db);
 		const visitRepository = new VisitRepository(db);
 		const usecase = new HeartbeatUsecase(placeRepository, visitRepository);
 
-		const result = await usecase.execute(lat, lng, placeId);
+		const result = await usecase.execute(lat, lng, placeId, userId);
 
 		if (result.status === "not_found") {
 			return c.json(

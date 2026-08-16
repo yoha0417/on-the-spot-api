@@ -8,9 +8,7 @@ export class HeartbeatUsecase {
 		private visitRepo: VisitRepository,
 	) {}
 
-	async execute(lat: number, lng: number, placeId: string) {
-		const userId = "current-user-id";
-
+	async execute(lat: number, lng: number, placeId: string, userId: string) {
 		// 1. visits テーブルから該当ユーザーの status = 'active' かつ place_id = placeId のレコードを取得
 		const visit = await this.visitRepo.findActiveVisitByUserAndPlace(
 			userId,

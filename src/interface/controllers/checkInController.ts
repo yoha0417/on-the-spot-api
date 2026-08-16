@@ -7,7 +7,10 @@ import { VisitRepository } from "../../infrastructure/repositories/visitReposito
 import { CheckInUsecase } from "../../usecase/checkInUsecase";
 
 // Variablesの型を定義して c.get('db') でエラーが出ないようにする
-export const checkInController = new Hono<{ Variables: { db: DbInstance } }>();
+export const checkInController = new Hono<{
+	Bindings: { JWT_SECRET: string };
+	Variables: { db: DbInstance; userId: string };
+}>();
 
 // 1. Zodでリクエストボディの「スキーマ（期待する構造）」を定義
 const checkInSchema = z.object({
@@ -41,12 +44,14 @@ checkInController.post(
 			throw new Error("DB instance is missing in Hono context");
 		}
 
+		const userId = c.get("userId");
+
 		// 2. RepositoryにDBを渡し、UseCaseにRepositoryを渡す
 		const placeRepository = new PlaceRepository(db);
 		const visitRepository = new VisitRepository(db);
 		const usecase = new CheckInUsecase(placeRepository, visitRepository);
 
-		const result = await usecase.execute(lat, lng, placeId);
+		const result = await usecase.execute(lat, lng, placeId, userId);
 
 		return c.json(result, 200);
 	},

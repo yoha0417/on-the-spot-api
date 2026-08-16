@@ -10,6 +10,7 @@ import { LikePostUsecase } from "../../usecase/likePostUsecase";
 import { PostUsecase } from "../../usecase/postUsecase";
 
 export const postController = new Hono<{
+	Bindings: { JWT_SECRET: string };
 	Variables: { db: DbInstance; userId: string };
 }>();
 
@@ -36,12 +37,13 @@ postController.post(
 			throw new Error("DB instance is missing in Hono context");
 		}
 
+		const userId = c.get("userId");
 		const visitRepository = new VisitRepository(db);
 		const postRepository = new PostRepository(db);
 		const usecase = new CreatePostUsecase(visitRepository, postRepository);
 
 		const result = await usecase.execute({
-			userId: "current-user-id", // TODO: 認証から取得
+			userId: userId,
 			placeId,
 			content,
 			isDelayedPublish: is_delayed_publish,

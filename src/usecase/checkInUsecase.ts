@@ -9,7 +9,7 @@ export class CheckInUsecase {
 		private visitRepo: VisitRepository,
 	) {}
 
-	async execute(lat: number, lng: number, placeId: string) {
+	async execute(lat: number, lng: number, placeId: string, userId: string) {
 		// 1. Calculate bounding box
 		const place = await this.placeRepo.findByPlaceId(placeId);
 		if (!place) {
@@ -27,7 +27,7 @@ export class CheckInUsecase {
 		}
 
 		const visit = await this.visitRepo.createChecknedIn({
-			userId: "current-user-id",
+			userId: userId,
 			placeId,
 			checked_in_at: new Date(),
 			last_heartbeat_at: new Date(),
