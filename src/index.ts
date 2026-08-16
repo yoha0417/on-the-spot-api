@@ -9,8 +9,8 @@ import { createDb } from "./infrastructure/db/client";
 import { VisitRepository } from "./infrastructure/repositories/visitRepository";
 import { authController } from "./interface/controllers/authController";
 import { checkInController } from "./interface/controllers/checkInController";
-import { heartbeatController } from "./interface/controllers/heartbeatController";
 import { checkoutController } from "./interface/controllers/checkoutController";
+import { heartbeatController } from "./interface/controllers/heartbeatController";
 import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
 import { authMiddleware } from "./middleware/authMiddleware";
@@ -21,13 +21,11 @@ import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
 type Bindings = {
 	DB: D1Database; // wrangler.jsonc の binding 名と一致させる
 	JWT_SECRET: string;
-	useId: string;
 };
 
 type Variables = {
 	db: ReturnType<typeof createDb>; // Drizzleインスタンスの型
 	JWT_SECRET: string; // ここに string として定義！
-	useId: string;
 	userId: string; // 追加
 };
 
