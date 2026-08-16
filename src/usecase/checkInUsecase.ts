@@ -22,7 +22,7 @@ export class CheckInUsecase {
 			place.latitude,
 			place.longitude,
 		);
-		if (distance > 50) {
+		if (distance > 1000) {
 			throw new Error("チェックイン範囲外です");
 		}
 
