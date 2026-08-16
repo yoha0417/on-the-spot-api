@@ -53,7 +53,6 @@ app.use("/api/checkin/*", authMiddleware);
 app.use("/api/heartbeat/*", authMiddleware);
 app.use("/api/checkout/*", authMiddleware);
 app.use("/api/posts/*", authMiddleware);
-app.use("/api/places/*", authMiddleware);
 
 // --- 2. コントローラーの登録 ---
 // 認証が必要なルート (上でミドルウェアを通ってからここに来る)
@@ -61,10 +60,10 @@ app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/checkout", checkoutController);
 app.route("/api/posts", postController);
-app.route("/api/places", placeController);
 
 // パブリックなルート (上に app.use が無いのでそのまま通る)
 app.route("/api/auth", authController);
+app.route("/api/places", placeController);
 
 // グローバルなエラーハンドリング（予期せぬエラー用）
 app.onError((err, c) => {
