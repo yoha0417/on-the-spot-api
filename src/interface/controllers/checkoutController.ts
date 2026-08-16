@@ -6,7 +6,8 @@ import { VisitRepository } from "../../infrastructure/repositories/visitReposito
 import { CheckoutUsecase } from "../../usecase/checkoutUsecase";
 
 export const checkoutController = new Hono<{
-	Variables: { db: DbInstance };
+	Bindings: { JWT_SECRET: string };
+	Variables: { db: DbInstance; userId: string };
 }>();
 
 const checkoutSchema = z.object({
@@ -33,8 +34,7 @@ checkoutController.post(
 			throw new Error("DB instance is missing in Hono context");
 		}
 
-		// TODO: 認証ミドルウェアからユーザーIDを取得する
-		const userId = "current-user-id";
+		const userId = c.get("userId");
 
 		const visitRepository = new VisitRepository(db);
 		const usecase = new CheckoutUsecase(visitRepository);

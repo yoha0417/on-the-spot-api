@@ -28,6 +28,7 @@ type Variables = {
 	db: ReturnType<typeof createDb>; // Drizzleインスタンスの型
 	JWT_SECRET: string; // ここに string として定義！
 	useId: string;
+	userId: string; // 追加
 };
 
 // 型を適用してHonoインスタンスを作成
