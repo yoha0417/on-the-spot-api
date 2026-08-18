@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, lte, not, or, sql } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { likes, posts, users, visits } from "../db/schema";
+import { likes, places, posts, users, visits } from "../db/schema";
 
 export class PostRepository {
 	constructor(private db: DbInstance) {}
@@ -78,10 +78,15 @@ export class PostRepository {
 					)
 				`,
 				userName: users.name,
+				placeName: places.name,
+				placeAddress: places.address,
+				placeLatitude: places.latitude,
+				placeLongitude: places.longitude,
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))
 			.leftJoin(users, eq(posts.userId, users.id))
+			.leftJoin(places, eq(posts.placeId, places.id))
 			.where(eq(posts.userId, userId))
 			.orderBy(desc(posts.createdAt));
 	}

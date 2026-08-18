@@ -10,6 +10,10 @@ export const postSchema = {
 		isDelayedPublish: { type: "boolean" },
 		likesCount: { type: "integer" },
 		createdAt: { type: "string", format: "date-time" },
+		placeName: { type: "string", nullable: true },
+		placeAddress: { type: "string", nullable: true },
+		placeLatitude: { type: "number", nullable: true },
+		placeLongitude: { type: "number", nullable: true },
 	},
 	required: [
 		"id",
