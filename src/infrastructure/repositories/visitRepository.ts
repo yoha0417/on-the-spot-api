@@ -1,6 +1,6 @@
 import { and, eq, lt } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { type VisitStatus, visits } from "../db/schema";
+import { type VisitStatus, visits, places } from "../db/schema";
 
 export class VisitRepository {
 	constructor(private db: DbInstance) {}
@@ -95,5 +95,26 @@ export class VisitRepository {
 				),
 			)
 			.returning();
+	}
+
+	async findVisitsWithPlaceByUserId(userId: string) {
+		const rows = await this.db
+			.select({
+				visitId: visits.id,
+				checkedInAt: visits.checkedInAt,
+				checkedOutAt: visits.checkedOutAt,
+				status: visits.status,
+				placeId: places.id,
+				placeName: places.name,
+				placeLatitude: places.latitude,
+				placeLongitude: places.longitude,
+				placeAddress: places.address,
+			})
+			.from(visits)
+			.innerJoin(places, eq(visits.placeId, places.id))
+			.where(eq(visits.userId, userId))
+			.orderBy(visits.checkedInAt);
+
+		return rows;
 	}
 }

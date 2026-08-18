@@ -13,6 +13,7 @@ import { checkoutController } from "./interface/controllers/checkoutController";
 import { heartbeatController } from "./interface/controllers/heartbeatController";
 import { placeController } from "./interface/controllers/placeController";
 import { postController } from "./interface/controllers/postController";
+import { visitController } from "./interface/controllers/visitController";
 import { authMiddleware } from "./middleware/authMiddleware";
 import { openApiSchema } from "./openapi";
 import { AutoCheckoutUsecase } from "./usecase/autoCheckoutUsecase";
@@ -53,6 +54,7 @@ app.use("/api/checkin/*", authMiddleware);
 app.use("/api/heartbeat/*", authMiddleware);
 app.use("/api/checkout/*", authMiddleware);
 app.use("/api/posts/*", authMiddleware);
+app.use("/api/visits/*", authMiddleware);
 
 // --- 2. コントローラーの登録 ---
 // 認証が必要なルート (上でミドルウェアを通ってからここに来る)
@@ -60,6 +62,7 @@ app.route("/api/checkin", checkInController);
 app.route("/api/heartbeat", heartbeatController);
 app.route("/api/checkout", checkoutController);
 app.route("/api/posts", postController);
+app.route("/api/visits", visitController);
 
 // パブリックなルート (上に app.use が無いのでそのまま通る)
 app.route("/api/auth", authController);

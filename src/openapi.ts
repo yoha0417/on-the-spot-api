@@ -1,8 +1,10 @@
 import { postSchema } from "./openapi/schemas/post";
+import { visitWithPlaceSchema } from "./openapi/schemas/visit";
 import { authPaths } from "./openapi/paths/auth";
 import { checkinPaths } from "./openapi/paths/checkin";
 import { postsPaths } from "./openapi/paths/posts";
 import { placesPaths } from "./openapi/paths/places";
+import { visitsPaths } from "./openapi/paths/visits";
 
 export const openApiSchema = {
 	openapi: "3.0.0",
@@ -21,6 +23,7 @@ export const openApiSchema = {
 		},
 		schemas: {
 			Post: postSchema,
+			VisitWithPlace: visitWithPlaceSchema,
 		},
 	},
 	paths: {
@@ -28,5 +31,6 @@ export const openApiSchema = {
 		...checkinPaths,
 		...postsPaths,
 		...placesPaths,
+		...visitsPaths,
 	},
 };
