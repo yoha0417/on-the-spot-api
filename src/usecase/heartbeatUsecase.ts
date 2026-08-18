@@ -32,7 +32,7 @@ export class HeartbeatUsecase {
 			place.longitude,
 		);
 
-		// 50mを大きく超えている場合は強制チェックアウト処理へ回す（ここではバッファとして100m超とする）
+		// 50mを大きく超えている場合は強制チェックアウト処理へ回す（ここではバッファとして1000m超とする）
 		if (distance > 1000) {
 			await this.visitRepo.checkout(visit.id, new Date());
 			return { status: "checked_out" as const };
