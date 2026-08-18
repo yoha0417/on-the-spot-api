@@ -15,7 +15,7 @@ export class PostUsecase {
 		});
 	}
 
-	async execute(userId: string, currentTime: Date) {
-		return this.postRepo.findUserPosts(userId, currentTime);
+	async execute(userId: string, currentTime: Date, viewerId = userId) {
+		return this.postRepo.findUserPosts(userId, currentTime, viewerId);
 	}
 }

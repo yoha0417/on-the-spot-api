@@ -90,7 +90,8 @@ postController.get("/user/:userId", async (c) => {
 	const postUsecase = new PostUsecase(postRepo);
 	const currentTime = new Date();
 
-	const userPosts = await postUsecase.execute(userId, currentTime);
+	const authUserId = c.get("userId");
+	const userPosts = await postUsecase.execute(userId, currentTime, authUserId);
 
 	return c.json({
 		posts: userPosts,

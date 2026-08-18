@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, lte, not, or, sql } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { likes, places, posts, users, visits } from "../db/schema";
+import { likes, posts, users, visits } from "../db/schema";
 
 export class PostRepository {
 	constructor(private db: DbInstance) {}
@@ -40,8 +40,10 @@ export class PostRepository {
 		return result;
 	}
 
-	async findUserPosts(userId: string, currentTime: Date) {
+	async findUserPosts(userId: string, currentTime: Date, viewerId: string) {
+		const currentTimeIso = currentTime.toISOString();
 		const thresholdTime = new Date(currentTime.getTime() - 30 * 60 * 1000); // 30分前
+
 		return await this.db
 			.select({
 				id: posts.id,
@@ -51,21 +53,35 @@ export class PostRepository {
 				content: posts.content,
 				isDelayedPublish: posts.isDelayedPublish,
 				createdAt: posts.createdAt,
-				likesCount: posts.likesCount,
-				placeName: places.name,
-				placeAddress: places.address,
 				isWaitingForUnlock: sql<boolean>`
 					CASE
-						WHEN ${posts.userId} = ${userId} AND ${posts.isDelayedPublish} = true AND 
+						WHEN ${posts.userId} = ${viewerId} AND ${posts.isDelayedPublish} = true AND 
 							 (${visits.checkedOutAt} IS NULL OR ${visits.checkedOutAt} > ${thresholdTime.toISOString()})
 						THEN true
 						ELSE false
 					END
 				`,
+				stayDurationMinutes: sql<number>`
+					ROUND(
+						(
+							julianday(COALESCE(${visits.checkedOutAt}, ${currentTimeIso}))
+							- julianday(${visits.checkedInAt})
+						) * 24 * 60
+					)
+				`,
+				isMine: sql<boolean>`${posts.userId} = ${viewerId}`,
+				likesCount: posts.likesCount,
+				isLiked: sql<boolean>`
+					EXISTS (
+						SELECT 1 FROM ${likes} 
+						WHERE ${likes.postId} = ${posts.id} AND ${likes.userId} = ${viewerId}
+					)
+				`,
+				userName: users.name,
 			})
 			.from(posts)
 			.leftJoin(visits, eq(posts.visitId, visits.id))
-			.leftJoin(places, eq(posts.placeId, places.id))
+			.leftJoin(users, eq(posts.userId, users.id))
 			.where(eq(posts.userId, userId))
 			.orderBy(desc(posts.createdAt));
 	}
