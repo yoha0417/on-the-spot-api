@@ -94,6 +94,7 @@ postController.get("/user/:userId", async (c) => {
 
 	return c.json({
 		posts: userPosts,
+		currentTime: currentTime.toISOString(),
 	});
 });
 
