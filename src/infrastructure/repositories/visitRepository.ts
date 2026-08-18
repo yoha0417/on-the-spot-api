@@ -10,7 +10,17 @@ export class VisitRepository {
 		placeId: string;
 		checkedInAt: string;
 	}) {
-		return await this.db.insert(visits).values(data).returning();
+		return await this.db
+			.insert(visits)
+			.values({
+				userId: data.userId,
+				placeId: data.placeId,
+				checkedInAt: data.checkedInAt,
+				lastHeartbeatAt: data.checkedInAt,
+				status: "active",
+				checkedOutAt: null,
+			})
+			.returning();
 	}
 
 	async createChecknedIn(data: {
@@ -28,6 +38,7 @@ export class VisitRepository {
 				checkedInAt: data.checked_in_at.toISOString(),
 				lastHeartbeatAt: data.last_heartbeat_at.toISOString(),
 				status: data.status,
+				checkedOutAt: null,
 			})
 			.returning();
 		return result;

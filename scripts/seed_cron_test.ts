@@ -42,6 +42,7 @@ async function main() {
 		checkedInAt: fortyMinutesAgo.toISOString(),
 		lastHeartbeatAt: fortyMinutesAgo.toISOString(),
 		status: "active",
+		checkedOutAt: null,
 	});
 
 	// 2. 生存中の滞在レコード (10分前)
@@ -52,6 +53,7 @@ async function main() {
 		checkedInAt: tenMinutesAgo.toISOString(),
 		lastHeartbeatAt: tenMinutesAgo.toISOString(),
 		status: "active",
+		checkedOutAt: null,
 	});
 
 	console.log("✅ Cron test data seed complete!");
