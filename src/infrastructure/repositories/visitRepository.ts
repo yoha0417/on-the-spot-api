@@ -1,6 +1,6 @@
-import { and, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import type { DbInstance } from "../db/client";
-import { type VisitStatus, visits, places } from "../db/schema";
+import { places, type VisitStatus, visits } from "../db/schema";
 
 export class VisitRepository {
 	constructor(private db: DbInstance) {}
@@ -54,7 +54,9 @@ export class VisitRepository {
 					eq(visits.placeId, placeId),
 					eq(visits.status, "active"),
 				),
-			);
+			)
+			.orderBy(desc(visits.checkedInAt))
+			.limit(1);
 		return visit;
 	}
 
@@ -113,7 +115,7 @@ export class VisitRepository {
 			.from(visits)
 			.innerJoin(places, eq(visits.placeId, places.id))
 			.where(eq(visits.userId, userId))
-			.orderBy(visits.checkedInAt);
+			.orderBy(desc(visits.checkedInAt));
 
 		return rows;
 	}
